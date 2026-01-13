@@ -40,6 +40,35 @@ This project demonstrates:
 - Visit `/break` to simulate a failure (causes the liveness probe to fail)
 - Kubernetes will automatically restart unhealthy pods
 
+## Troubleshooting
+
+### `/break` endpoint doesn't seem to work with multiple replicas
+
+If you visit `/break` and then immediately check `/health`, you might still see `"ok"` instead of `"error"`. This is expected behavior when running multiple replicas.
+
+**Why this happens:**
+- Each pod runs its own Flask instance with its own `healthy` state variable
+- The LoadBalancer service distributes requests across all pods
+- When you visit `/break`, it only affects the specific pod that handled that request
+- The next request to `/health` might hit a different pod that still has `healthy = True`
+
+**Solutions:**
+
+1. **Scale down to 1 replica for testing:**
+   ```bash
+   kubectl scale deployment kubernetes-experiments-deployment --replicas=1
+   ```
+   After testing, scale back up:
+   ```bash
+   kubectl scale deployment kubernetes-experiments-deployment --replicas=2
+   ```
+
+2. **Use port-forwarding to target a specific pod:**
+   ```bash
+   kubectl port-forward <pod-name> 8080:80
+   ```
+   Then access `http://localhost:8080/break` and `http://localhost:8080/health` on that specific pod.
+
 ## Project Structure
 
 - `main.py` - Flask application with `/health` and `/break` endpoints
