@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: kubernetes-experiments-deployment
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kubernetes-experiments
+  template:
+    metadata:
+      labels:
+        app: kubernetes-experiments
+    spec:
+      containers:
+        - name: kubernetes-experiments
+          image: tonyvallad/kubernetes-experiments:latest
+          ports:
+            - containerPort: 80
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
